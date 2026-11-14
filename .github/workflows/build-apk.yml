@@ -18,10 +18,16 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev autoconf automake libtool libltdl-dev pkg-config cmake libffi-dev libssl-dev unzip zip openjdk-17-jdk
+          sudo apt-get install -y build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev autoconf automake libtool libltdl-dev pkg-config cmake libffi-dev libssl-dev unzip zip
 
       - name: Install Buildozer and Cython
         run: |
@@ -39,17 +45,16 @@ jobs:
           sed -i 's/^source.include_exts *=.*/source.include_exts = py,png,jpg,kv,atlas,wav,ogg,ttf,json/' buildozer.spec
           echo "---- spec check ----"
           grep -n -E "^\[|^(requirements|p4a|android\.(ndk|api|archs)|source\.include_exts)" buildozer.spec
+          java -version
+          echo "JAVA_HOME=$JAVA_HOME"
 
       - name: Cache Buildozer global directory
         uses: actions/cache@v4
         with:
           path: .buildozer
-          key: ${{ runner.os }}-2204-v6-buildozer-${{ hashFiles('buildozer.spec') }}
+          key: ${{ runner.os }}-2204-v7-buildozer-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            ${{ runner.os }}-2204-v6-buildozer-
-
-      - name: Remove stale python-for-android checkout
-        run: rm -rf .buildozer/android/platform/python-for-android
+            ${{ runner.os }}-2204-v7-buildozer-
 
       - name: Build with Buildozer
         run: yes | buildozer android debug
