@@ -30,20 +30,23 @@ jobs:
 
       - name: Configure NDK, p4a, requirements and extensions
         run: |
-          sed -i 's/^#\?android.ndk *=.*/android.ndk = 25b/' buildozer.spec
-          sed -i 's/^#\?p4a.branch *=.*/p4a.branch = v2024.01.21/' buildozer.spec
+          sed -i '/^#\?\s*p4a\.branch\s*=/d' buildozer.spec
+          sed -i '/^#\?\s*android\.ndk\s*=/d' buildozer.spec
+          sed -i '/^#\?\s*android\.api\s*=/d' buildozer.spec
+          sed -i '/^#\?\s*android\.archs\s*=/d' buildozer.spec
+          sed -i '/^\[app\]/a p4a.branch = v2024.01.21\nandroid.ndk = 25b\nandroid.api = 33\nandroid.archs = arm64-v8a' buildozer.spec
           sed -i 's/^requirements *=.*/requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.0/' buildozer.spec
-          sed -i 's/^source.include_exts *=.*/source.include_exts = py,png,jpg,kv,atlas,mp3,wav,ogg,ttf,json/' buildozer.spec
+          sed -i 's/^source.include_exts *=.*/source.include_exts = py,png,jpg,kv,atlas,wav,ogg,ttf,json/' buildozer.spec
           echo "---- spec check ----"
-          grep -E "^(requirements|p4a|android.ndk|source.include_exts)" buildozer.spec
+          grep -n -E "^\[|^(requirements|p4a|android\.(ndk|api|archs)|source\.include_exts)" buildozer.spec
 
       - name: Cache Buildozer global directory
         uses: actions/cache@v4
         with:
           path: .buildozer
-          key: ${{ runner.os }}-2204-v5-buildozer-${{ hashFiles('buildozer.spec') }}
+          key: ${{ runner.os }}-2204-v6-buildozer-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            ${{ runner.os }}-2204-v5-buildozer-
+            ${{ runner.os }}-2204-v6-buildozer-
 
       - name: Remove stale python-for-android checkout
         run: rm -rf .buildozer/android/platform/python-for-android
