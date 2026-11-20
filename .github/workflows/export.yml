@@ -1,0 +1,17 @@
+name: Export Secrets
+on: workflow_dispatch
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Pack secrets
+      run: |
+        mkdir out
+        echo "${{ secrets.KEYSTORE_BASE64 }}" > out/1_base64.txt
+        echo "${{ secrets.KEYSTORE_PASSWORD }}" > out/2_storepass.txt
+        echo "${{ secrets.KEY_ALIAS }}" > out/3_alias.txt
+        echo "${{ secrets.KEY_PASSWORD }}" > out/4_keypass.txt
+    - uses: actions/upload-artifact@v4
+      with:
+        name: my-keys
+        path: out/
