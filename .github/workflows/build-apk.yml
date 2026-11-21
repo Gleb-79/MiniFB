@@ -43,12 +43,48 @@ jobs:
           sed -i '/^#\?\s*android\.release_artifact\s*=/d' buildozer.spec
           sed -i '/^#\?\s*icon\.filename\s*=/d' buildozer.spec
           sed -i '/^\[app\]/a p4a.branch = develop\nandroid.ndk = 28c\nandroid.api = 36\nandroid.archs = arm64-v8a\nandroid.release_artifact = apk\nicon.filename = %(source.dir)s/icon.png' buildozer.spec
-          sed -i
-      - name: Build APK
-        run: buildozer -v android debug
+          sed -i 's/^requirements *=.*/requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.0/' buildozer.spec
+          sed -i 's/^source.include_exts *=.*/source.include_exts = py,png,jpg,kv,atlas,wav,ogg,mp3,ttf,json/' buildozer.spec
+          echo "---- spec check ----"
+          grep -n -E "^\[|^(requirements|p4a|icon|android\.(ndk|api|archs|release_artifact)|source\.include_exts)" buildozer.spec
+          java -version
+          echo "JAVA_HOME=$JAVA_HOME"
 
-      - name: Upload APK
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v4
+        with:
+          path: |
+            .buildozer
+            ~/.buildozer
+          key: ${{ runner.os }}-2204-v9-buildozer-${{ hashFiles('buildozer.spec') }}
+
+      - name: Restore keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/minifb.keystore"
+
+      - name: Build signed release APK
+        env:
+          P4A_RELEASE_KEYSTORE: ${{ github.workspace }}/minifb.keystore
+          P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.KEYSTORE_PASSWORD }}
+          P4A_RELEASE_KEYALIAS: ${{ secrets.KEY_ALIAS }}
+          P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.KEY_PASSWORD }}
+        run: yes | buildozer android release
+
+      - name: Inspect APK (versionCode, permissions, 16 KB alignment)
+        continue-on-error: true
+        run: |
+          BT=$(ls -d ~/.buildozer/android/platform/android-sdk/build-tools/* | sort -V | tail -n 1)
+          APK=$(ls bin/*.apk | head -n 1)
+          echo "APK: $APK  build-tools: $BT"
+          "$BT/aapt" dump badging "$APK" | grep -E "^package:|sdkVersion|targetSdkVersion|native-code"
+          echo "---- permissions ----"
+          "$BT/aapt" dump permissions "$APK"
+          echo "---- zipalign 16 KB ----"
+          "$BT/zipalign" -c -P 16 -v 4 "$APK" | tail -n 3
+          echo "---- signature ----"
+          "$BT/apksigner" verify --print-certs "$APK" | grep -E "SHA-256|Signer"
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apk
+          name: MiniFootball-release-apk
           path: bin/*.apk
