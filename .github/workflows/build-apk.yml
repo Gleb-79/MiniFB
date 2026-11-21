@@ -44,3 +44,11 @@ jobs:
           sed -i '/^#\?\s*icon\.filename\s*=/d' buildozer.spec
           sed -i '/^\[app\]/a p4a.branch = develop\nandroid.ndk = 28c\nandroid.api = 36\nandroid.archs = arm64-v8a\nandroid.release_artifact = apk\nicon.filename = %(source.dir)s/icon.png' buildozer.spec
           sed -i
+      - name: Build APK
+        run: buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: bin/*.apk
