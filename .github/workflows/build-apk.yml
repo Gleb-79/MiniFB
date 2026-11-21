@@ -42,35 +42,5 @@ jobs:
           sed -i '/^#\?\s*android\.archs\s*=/d' buildozer.spec
           sed -i '/^#\?\s*android\.release_artifact\s*=/d' buildozer.spec
           sed -i '/^#\?\s*icon\.filename\s*=/d' buildozer.spec
-          sed -i '/^\[app\]/a p4a.branch = v2024.01.21\nandroid.ndk = 25b\nandroid.api = 33\nandroid.archs = arm64-v8a\nandroid.release_artifact = apk\nicon.filename = %(source.dir)s/icon.png' buildozer.spec
-          sed -i 's/^requirements *=.*/requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.0/' buildozer.spec
-          sed -i 's/^source.include_exts *=.*/source.include_exts = py,png,jpg,kv,atlas,wav,ogg,mp3,ttf,json/' buildozer.spec
-          echo "---- spec check ----"
-          grep -n -E "^\[|^(requirements|p4a|icon|android\.(ndk|api|archs|release_artifact)|source\.include_exts)" buildozer.spec
-          java -version
-          echo "JAVA_HOME=$JAVA_HOME"
-
-      - name: Cache Buildozer global directory
-        uses: actions/cache@v4
-        with:
-          path: |
-            .buildozer
-            ~/.buildozer
-          key: ${{ runner.os }}-2204-v8-buildozer-${{ hashFiles('buildozer.spec') }}
-
-      - name: Restore keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/minifb.keystore"
-
-      - name: Build signed release APK
-        env:
-          P4A_RELEASE_KEYSTORE: ${{ github.workspace }}/minifb.keystore
-          P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.KEYSTORE_PASSWORD }}
-          P4A_RELEASE_KEYALIAS: ${{ secrets.KEY_ALIAS }}
-          P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.KEY_PASSWORD }}
-        run: yes | buildozer android release
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: MiniFootball-release-apk
-          path: bin/*.apk
+          sed -i '/^\[app\]/a p4a.branch = develop\nandroid.ndk = 28c\nandroid.api = 36\nandroid.archs = arm64-v8a\nandroid.release_artifact = apk\nicon.filename = %(source.dir)s/icon.png' buildozer.spec
+          sed -i
