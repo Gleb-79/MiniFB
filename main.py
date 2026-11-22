@@ -2097,6 +2097,35 @@ class SplashScreen(BoxLayout):
         popup.open()
 
 
+class SafeRoot(BoxLayout):
+    """Отодвигает игру от системных панелей Android (статус-бар сверху, навигация снизу).
+    С target API 35+ Android рисует приложение под панелями, поэтому отступы берём из WindowInsets."""
+
+    def __init__(self, child, **kw):
+        super().__init__(**kw)
+        self._tries = 0
+        self.add_widget(child)
+        if platform == "android":
+            Clock.schedule_interval(self._apply_insets, 0.25)
+
+    def _apply_insets(self, _dt):
+        self._tries += 1
+        top = bottom = 0
+        try:
+            from jnius import autoclass
+            act = autoclass("org.kivy.android.PythonActivity").mActivity
+            ins = act.getWindow().getDecorView().getRootWindowInsets()
+            if ins is not None:
+                top = ins.getSystemWindowInsetTop()
+                bottom = ins.getSystemWindowInsetBottom()
+        except Exception:
+            pass
+        if top or bottom:
+            self.padding = [0, top, 0, bottom]
+            return False  # получили значения - перестаём опрашивать
+        return self._tries < 20
+
+
 class MiniFootballApp(App):
     title = "MiniFootball"
 
@@ -2114,7 +2143,8 @@ class MiniFootballApp(App):
 
         self.manager.add_widget(splash_screen)
         self.manager.add_widget(game_screen)
-        return self.manager
+        Window.clearcolor = hexc(GREEN)
+        return SafeRoot(self.manager)
 
     def on_start(self):
         self.music.play()
