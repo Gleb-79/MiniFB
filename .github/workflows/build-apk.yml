@@ -43,7 +43,7 @@ jobs:
           sed -i '/^#\?\s*android\.release_artifact\s*=/d' buildozer.spec
           sed -i '/^#\?\s*icon\.filename\s*=/d' buildozer.spec
           sed -i '/^\[app\]/a p4a.branch = develop\nandroid.ndk = 28c\nandroid.api = 36\nandroid.archs = arm64-v8a\nandroid.release_artifact = apk\nicon.filename = %(source.dir)s/icon.png' buildozer.spec
-          sed -i 's/^requirements *=.*/requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.0/' buildozer.spec
+          sed -i 's/^requirements *=.*/requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.1/' buildozer.spec
           sed -i 's/^source.include_exts *=.*/source.include_exts = py,png,jpg,kv,atlas,wav,ogg,mp3,ttf,json/' buildozer.spec
           echo "---- spec check ----"
           grep -n -E "^\[|^(requirements|p4a|icon|android\.(ndk|api|archs|release_artifact)|source\.include_exts)" buildozer.spec
